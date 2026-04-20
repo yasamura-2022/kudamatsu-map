@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>わたしたちのまち下松</title>
+  
+  <!-- スタイルとフォントの読み込み -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- 地図ライブラリ（Leaflet）の読み込み -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- Reactの読み込み -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* 画面の高さを確実に100%にするための設定を追加しました */
+    html, body, #root { 
+      width: 100%; 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+      overflow: hidden; 
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const App = () => {
+      const mapRef = useRef(null);
+      const tileLayerRef = useRef(null);
+      const [mapType, setMapType] = useState('pale');
+
+      const colors = {
+        school: '#ef4444',
+        public: '#f97316',
+        traffic: '#3b82f6',
+        nature: '#10b981',
+        factory: '#64748b'
+      };
+
+      const spots = [
+        { id: 'center', name: '下松小学校', lat: 34.0121, lng: 131.8711, emoji: '🏫', color: colors.school },
+        { id: 'center2', name: '市役所', lat: 34.0149, lng: 131.8703, emoji: '🏢', color: colors.public },
+        { id: 'center3', name: '図書館', lat: 34.0160, lng: 131.8680, emoji: '📚', color: colors.public },
+        { id: 'north1', name: '新幹線', lat: 34.027, lng: 131.871, emoji: '🚅', color: colors.traffic },
+        { id: 'north2', name: '山', lat: 34.060, lng: 131.880, emoji: '⛰️', color: colors.nature },
+        { id: 'north3', name: '東陽小学校', lat: 34.049, lng: 131.890, emoji: '🏫', color: colors.school },
+        { id: 'south1', name: '海・笠戸島', lat: 33.985, lng: 131.860, emoji: '🌊', color: colors.nature },
+        { id: 'south2', name: '日立', lat: 34.001, lng: 131.865, emoji: '🏭', color: colors.factory },
+        { id: 'south3', name: '東洋鋼鈑', lat: 34.004, lng: 131.853, emoji: '🏭', color: colors.factory },
+        { id: 'east1', name: '下松駅', lat: 34.0146, lng: 131.8741, emoji: '🚉', color: colors.traffic },
+        { id: 'east2', name: 'ゆめタウン', lat: 34.011, lng: 131.882, emoji: '🏬', color: colors.public },
+        { id: 'east3', name: '公集小学校', lat: 34.008, lng: 131.884, emoji: '🏫', color: colors.school },
+        { id: 'east4', name: '久保小学校', lat: 34.032, lng: 131.902, emoji: '🏫', color: colors.school },
+        { id: 'west1', name: '中村小学校', lat: 34.018, lng: 131.860, emoji: '🏫', color: colors.school },
+        { id: 'west2', name: '花岡小学校', lat: 34.025, lng: 131.859, emoji: '🏫', color: colors.school },
+      ];
+
+      useEffect(() => {
+        initMap();
+        return () => {
+          if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+          }
+        };
+      }, []);
+
+      const initMap = () => {
+        if (mapRef.current) return;
+        const L = window.L;
+        
+        const map = L.map('map', { zoomControl: false });
+        L.control.zoom({ position: 'topright' }).addTo(map);
+        
+        if (map.zoomControl && map.zoomControl.getContainer()) {
+          map.zoomControl.getContainer().style.marginTop = '60px';
+        }
+
+        spots.forEach(spot => {
+          const iconHtml = `
+            <div style="display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); width: 120px;">
+              <div style="
+                background-color: ${spot.color};
+                width: 32px; height: 32px;
+                border-radius: 50%;
+                border: 2px solid white;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 16px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+              ">
+                ${spot.emoji}
+              </div>
+              <div style="
+                background-color: rgba(255, 255, 255, 0.95);
+                border: 1.5px solid ${spot.color};
+                padding: 1px 6px;
+                border-radius: 10px;
+                font-size: 11px;
+                font-weight: bold;
+                color: #333;
+                margin-top: 4px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                font-family: 'Zen Maru Gothic', sans-serif;
+                text-align: center;
+              ">
+                ${spot.name}
+              </div>
+            </div>
+          `;
+          
+          const customIcon = L.divIcon({ html: iconHtml, className: '', iconSize: [0, 0], iconAnchor: [0, 0] });
+          L.marker([spot.lat, spot.lng], { icon: customIcon }).addTo(map);
+        });
+        
+        fetch('https://nominatim.openstreetmap.org/search?city=下松市&state=山口県&country=Japan&polygon_geojson=1&format=json')
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              const geojson = data[0].geojson;
+              const L = window.L;
+              L.geoJSON(geojson, {
+                style: { color: '#ef4444', weight: 5, dashArray: '10, 10', fill: false }
+              }).addTo(map);
+            }
+          })
+          .catch(error => console.error("市境の取得に失敗しました", error));
+
+        mapRef.current = map;
+        map.setView([34.0121, 131.8711], 15);
+        changeMapLayer(map, 'pale');
+
+        // 地図が途切れて真っ白になるのを防ぐため、少し遅らせてサイズを再計算させます
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+      };
+
+      const changeMapLayer = (map, type) => {
+        const L = window.L;
+        if (tileLayerRef.current) map.removeLayer(tileLayerRef.current);
+        
+        let url, attrib;
+        if (type === 'pale') {
+          url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
+          attrib = '&copy; OpenStreetMap contributors &copy; CARTO';
+        } else {
+          url = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png';
+          attrib = '&copy; <a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank">国土地理院</a>';
+        }
+
+        tileLayerRef.current = L.tileLayer(url, { maxZoom: 18, attribution: attrib }).addTo(map);
+      };
+
+      const handleMapTypeChange = (type) => {
+        setMapType(type);
+        if (mapRef.current) changeMapLayer(mapRef.current, type);
+      };
+
+      const moveMap = (dir) => {
+        const map = mapRef.current;
+        if (!map) return;
+
+        if (dir === 'center') map.flyTo([34.0121, 131.8711], 15);
+        if (dir === 'north') map.flyTo([34.040, 131.880], 13);
+        if (dir === 'south') map.flyTo([33.995, 131.860], 14);
+        if (dir === 'east') map.flyTo([34.020, 131.890], 13);
+        if (dir === 'west') map.flyTo([34.018, 131.855], 14);
+      };
+
+      return (
+        /* h-screen を h-full に変更して、画面全体に確実に広がるようにしました */
+        <div className="relative w-full h-full overflow-hidden bg-blue-50" style={{ fontFamily: '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif' }}>
+          <div className="absolute top-0 left-0 right-0 bg-white/90 shadow-sm z-[1000] backdrop-blur-sm p-2 border-b border-gray-200">
+            <div className="max-w-6xl mx-auto flex items-center justify-between">
+              <h1 className="text-base md:text-xl font-bold text-gray-800 flex items-center gap-1 md:gap-2 whitespace-nowrap">
+                <span className="hidden md:inline">🗺️</span> わたしたちのまち下松
+              </h1>
+              <div className="flex bg-gray-200 rounded-lg p-1 shadow-inner ml-2">
+                <button onClick={() => handleMapTypeChange('pale')} className={`px-2 py-1 md:px-4 md:py-1.5 rounded-md text-xs md:text-sm font-bold transition-all duration-200 ${mapType === 'pale' ? 'bg-white text-blue-600 shadow' : 'text-gray-500 hover:text-gray-700'}`}>すっきり地図</button>
+                <button onClick={() => handleMapTypeChange('std')} className={`px-2 py-1 md:px-4 md:py-1.5 rounded-md text-xs md:text-sm font-bold transition-all duration-200 ${mapType === 'std' ? 'bg-white text-green-600 shadow' : 'text-gray-500 hover:text-gray-700'}`}>くわしい地図</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="map" className="w-full h-full z-0 absolute top-0 left-0"></div>
+
+          <div className="absolute bottom-6 right-4 w-32 h-32 md:w-40 md:h-40 bg-white/90 rounded-full flex items-center justify-center shadow-xl border-4 border-gray-200 z-[1000] backdrop-blur-sm">
+            <button onClick={() => moveMap('north')} className="absolute top-1 md:top-2 w-10 h-10 md:w-11 md:h-11 bg-blue-100 hover:bg-blue-200 rounded-full font-bold text-blue-700 shadow flex items-center justify-center transition-transform active:scale-95 text-xs md:text-sm">北</button>
+            <button onClick={() => moveMap('south')} className="absolute bottom-1 md:bottom-2 w-10 h-10 md:w-11 md:h-11 bg-red-100 hover:bg-red-200 rounded-full font-bold text-red-700 shadow flex items-center justify-center transition-transform active:scale-95 text-xs md:text-sm">南</button>
+            <button onClick={() => moveMap('east')} className="absolute right-1 md:right-2 w-10 h-10 md:w-11 md:h-11 bg-green-100 hover:bg-green-200 rounded-full font-bold text-green-700 shadow flex items-center justify-center transition-transform active:scale-95 text-xs md:text-sm">東</button>
+            <button onClick={() => moveMap('west')} className="absolute left-1 md:left-2 w-10 h-10 md:w-11 md:h-11 bg-yellow-100 hover:bg-yellow-200 rounded-full font-bold text-yellow-700 shadow flex items-center justify-center transition-transform active:scale-95 text-xs md:text-sm">西</button>
+            <button onClick={() => moveMap('center')} className="w-12 h-12 md:w-12 md:h-12 bg-orange-100 hover:bg-orange-200 rounded-full font-bold text-orange-700 shadow flex items-center justify-center transition-transform active:scale-95 text-[10px] md:text-xs">学校</button>
+          </div>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
