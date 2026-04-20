@@ -48,27 +48,34 @@
         factory: '#64748b'
       };
 
-      // 位置データを実際の地図に合わせて修正・追加しました
+      // 実際の地図に合わせて位置をより正確に修正しました
       const spots = [
-        { id: 'center', name: '下松小学校', lat: 34.0121, lng: 131.8711, emoji: '🏫', color: colors.school },
+        // 中心のエリア
+        { id: 'center1', name: '下松小学校', lat: 34.0121, lng: 131.8711, emoji: '🏫', color: colors.school },
         { id: 'center2', name: '市役所', lat: 34.0149, lng: 131.8703, emoji: '🏢', color: colors.public },
         { id: 'center3', name: '図書館', lat: 34.0160, lng: 131.8680, emoji: '📚', color: colors.public },
+        { id: 'center4', name: '下松駅', lat: 34.0146, lng: 131.8741, emoji: '🚉', color: colors.traffic },
+        // 駅と重なって見えなくならないよう、少しだけ南にずらして中心エリアにしました
+        { id: 'center5', name: '下松公園(星の塔)', lat: 34.0105, lng: 131.8745, emoji: '🗼', color: colors.nature },
+        
+        // 北のエリア
         { id: 'north1', name: '新幹線', lat: 34.027, lng: 131.871, emoji: '🚅', color: colors.traffic },
-        { id: 'north2', name: '山', lat: 34.060, lng: 131.880, emoji: '⛰️', color: colors.nature },
-        { id: 'north3', name: '東陽小学校', lat: 34.049, lng: 131.890, emoji: '🏫', color: colors.school },
+        { id: 'north2', name: '花岡小学校', lat: 34.0384, lng: 131.8740, emoji: '🏫', color: colors.school }, // 正しい位置（北）へ移動
+        { id: 'north3', name: '山', lat: 34.060, lng: 131.880, emoji: '⛰️', color: colors.nature },
+        { id: 'north4', name: '東陽小学校', lat: 34.049, lng: 131.890, emoji: '🏫', color: colors.school },
+        
+        // 南のエリア
         { id: 'south1', name: '海・笠戸島', lat: 33.985, lng: 131.860, emoji: '🌊', color: colors.nature },
         { id: 'south2', name: '日立', lat: 34.001, lng: 131.865, emoji: '🏭', color: colors.factory },
         { id: 'south3', name: '東洋鋼鈑', lat: 34.004, lng: 131.853, emoji: '🏭', color: colors.factory },
-        { id: 'east1', name: '下松駅', lat: 34.0146, lng: 131.8741, emoji: '🚉', color: colors.traffic },
-        { id: 'east2', name: '久保小学校', lat: 34.032, lng: 131.902, emoji: '🏫', color: colors.school },
         
-        // 下松公園（星の塔）を追加しました
-        { id: 'east3', name: '下松公園(星の塔)', lat: 34.0121, lng: 131.8745, emoji: '🗼', color: colors.nature },
+        // 東のエリア
+        { id: 'east1', name: '久保小学校', lat: 34.032, lng: 131.902, emoji: '🏫', color: colors.school },
         
-        { id: 'west1', name: '中村小学校', lat: 34.018, lng: 131.860, emoji: '🏫', color: colors.school },
-        { id: 'west2', name: '花岡小学校', lat: 34.025, lng: 131.859, emoji: '🏫', color: colors.school },
-        { id: 'west3', name: 'ゆめタウン', lat: 34.0183, lng: 131.8630, emoji: '🏬', color: colors.public },
-        { id: 'west4', name: '公集小学校', lat: 34.0189, lng: 131.8559, emoji: '🏫', color: colors.school },
+        // 西のエリア
+        { id: 'west1', name: 'ゆめタウン', lat: 34.0183, lng: 131.8630, emoji: '🏬', color: colors.public },
+        { id: 'west2', name: '公集小学校', lat: 34.0189, lng: 131.8559, emoji: '🏫', color: colors.school },
+        { id: 'west3', name: '中村小学校', lat: 34.0298, lng: 131.8552, emoji: '🏫', color: colors.school }, // 正しい位置（少し北西）へ移動
       ];
 
       useEffect(() => {
@@ -93,8 +100,9 @@
         }
 
         spots.forEach(spot => {
+          // アイコンの重なりを防ぐため、z-indexを追加
           const iconHtml = `
-            <div style="display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); width: 120px;">
+            <div style="display: flex; flex-direction: column; align-items: center; transform: translate(-50%, -50%); width: 120px; position: relative; z-index: 1000;">
               <div style="
                 background-color: ${spot.color};
                 width: 32px; height: 32px;
@@ -118,6 +126,7 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                 font-family: 'Zen Maru Gothic', sans-serif;
                 text-align: center;
+                white-space: nowrap;
               ">
                 ${spot.name}
               </div>
@@ -142,7 +151,8 @@
           .catch(error => console.error("市境の取得に失敗しました", error));
 
         mapRef.current = map;
-        map.setView([34.0121, 131.8711], 15);
+        // 初期表示を少し引いて、星の塔や駅もしっかり入るようにしました
+        map.setView([34.013, 131.872], 15);
         changeMapLayer(map, 'pale');
 
         setTimeout(() => {
@@ -175,12 +185,12 @@
         const map = mapRef.current;
         if (!map) return;
 
-        if (dir === 'center') map.flyTo([34.0121, 131.8711], 15);
-        if (dir === 'north') map.flyTo([34.040, 131.880], 13);
+        // 各ボタンを押したときに、該当のアイコンが綺麗に収まるようにズームと位置を細かく再調整しました
+        if (dir === 'center') map.flyTo([34.013, 131.872], 15); // 星の塔や駅も入るように
+        if (dir === 'north') map.flyTo([34.035, 131.880], 13);
         if (dir === 'south') map.flyTo([33.995, 131.860], 14);
-        if (dir === 'east') map.flyTo([34.020, 131.890], 13);
-        
-        if (dir === 'west') map.flyTo([34.020, 131.855], 14); 
+        if (dir === 'east') map.flyTo([34.025, 131.895], 14);
+        if (dir === 'west') map.flyTo([34.022, 131.860], 14); // 中村小・公集小・ゆめタウンがすべて入るように
       };
 
       return (
