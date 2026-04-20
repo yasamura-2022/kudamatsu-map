@@ -19,7 +19,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
   <style>
-    /* 画面の高さを確実に100%にするための設定を追加しました */
+    /* 画面の高さを確実に100%にするための設定 */
     html, body, #root { 
       width: 100%; 
       height: 100%; 
@@ -48,6 +48,7 @@
         factory: '#64748b'
       };
 
+      // 位置データを実際の地図に合わせて修正・追加しました
       const spots = [
         { id: 'center', name: '下松小学校', lat: 34.0121, lng: 131.8711, emoji: '🏫', color: colors.school },
         { id: 'center2', name: '市役所', lat: 34.0149, lng: 131.8703, emoji: '🏢', color: colors.public },
@@ -59,11 +60,15 @@
         { id: 'south2', name: '日立', lat: 34.001, lng: 131.865, emoji: '🏭', color: colors.factory },
         { id: 'south3', name: '東洋鋼鈑', lat: 34.004, lng: 131.853, emoji: '🏭', color: colors.factory },
         { id: 'east1', name: '下松駅', lat: 34.0146, lng: 131.8741, emoji: '🚉', color: colors.traffic },
-        { id: 'east2', name: 'ゆめタウン', lat: 34.011, lng: 131.882, emoji: '🏬', color: colors.public },
-        { id: 'east3', name: '公集小学校', lat: 34.008, lng: 131.884, emoji: '🏫', color: colors.school },
-        { id: 'east4', name: '久保小学校', lat: 34.032, lng: 131.902, emoji: '🏫', color: colors.school },
+        { id: 'east2', name: '久保小学校', lat: 34.032, lng: 131.902, emoji: '🏫', color: colors.school },
+        
+        // 下松公園（星の塔）を追加しました
+        { id: 'east3', name: '下松公園(星の塔)', lat: 34.0121, lng: 131.8745, emoji: '🗼', color: colors.nature },
+        
         { id: 'west1', name: '中村小学校', lat: 34.018, lng: 131.860, emoji: '🏫', color: colors.school },
         { id: 'west2', name: '花岡小学校', lat: 34.025, lng: 131.859, emoji: '🏫', color: colors.school },
+        { id: 'west3', name: 'ゆめタウン', lat: 34.0183, lng: 131.8630, emoji: '🏬', color: colors.public },
+        { id: 'west4', name: '公集小学校', lat: 34.0189, lng: 131.8559, emoji: '🏫', color: colors.school },
       ];
 
       useEffect(() => {
@@ -140,7 +145,6 @@
         map.setView([34.0121, 131.8711], 15);
         changeMapLayer(map, 'pale');
 
-        // 地図が途切れて真っ白になるのを防ぐため、少し遅らせてサイズを再計算させます
         setTimeout(() => {
           map.invalidateSize();
         }, 100);
@@ -175,11 +179,11 @@
         if (dir === 'north') map.flyTo([34.040, 131.880], 13);
         if (dir === 'south') map.flyTo([33.995, 131.860], 14);
         if (dir === 'east') map.flyTo([34.020, 131.890], 13);
-        if (dir === 'west') map.flyTo([34.018, 131.855], 14);
+        
+        if (dir === 'west') map.flyTo([34.020, 131.855], 14); 
       };
 
       return (
-        /* h-screen を h-full に変更して、画面全体に確実に広がるようにしました */
         <div className="relative w-full h-full overflow-hidden bg-blue-50" style={{ fontFamily: '"Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif' }}>
           <div className="absolute top-0 left-0 right-0 bg-white/90 shadow-sm z-[1000] backdrop-blur-sm p-2 border-b border-gray-200">
             <div className="max-w-6xl mx-auto flex items-center justify-between">
